@@ -177,8 +177,7 @@ int main(int argc, char *argv[])
 	unsigned int x = screen_x + pos_x;
 	unsigned int y = screen_y + pos_y;
 	unsigned int text_height = font->ascent - font->descent;
-	unsigned int text_height1 = font1->ascent - font1->descent;
-	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height * text_height1 + 2 * padding;
+	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height + 2 * padding;
 
 	if (corner == TOP_RIGHT || corner == BOTTOM_RIGHT)
 		x = screen_x + screen_width - width - border_size * 2 - pos_x;
@@ -223,7 +222,7 @@ int main(int argc, char *argv[])
 			}
             for (int i = 0; i < num_of_lines; i++){
 				int len = strlen(lines[i]);
-				XftDrawStringUtf8(draw, &color, font1, (width - len*max_font_width)/2, line_spacing * i + text_height1 * (i + 1) + padding,
+				XftDrawStringUtf8(draw, &color, font1, (width - len*max_font_width)/2, line_spacing * i + text_height * (i + 1) + padding,
 								  (FcChar8 *)lines[i], len);
 			}
 

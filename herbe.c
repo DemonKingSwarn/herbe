@@ -30,11 +30,12 @@ static void die(const char *format, ...)
 	exit(EXIT_FAIL);
 }
 
-static int get_max_len(char *string, XftFont *font, int max_text_width)
+static int get_max_len(char *string, XftFont *font, XftFont *font1, int max_text_width)
 {
 	int eol = strlen(string);
 	XGlyphInfo info;
 	XftTextExtentsUtf8(display, font, (FcChar8 *)string, eol, &info);
+	XftTextExtentsUtf8(display, font1, (FcChar8 *)string, eol, &info);
 
 	if (info.width > max_text_width)
 	{
@@ -45,6 +46,7 @@ static int get_max_len(char *string, XftFont *font, int max_text_width)
 		{
 			eol++;
 			XftTextExtentsUtf8(display, font, (FcChar8 *)string, eol, &info);
+			XftTextExtentsUtf8(display, font1, (FcChar8 *)string, eol, &info);
 		}
 
 		eol--;
@@ -140,6 +142,7 @@ int main(int argc, char *argv[])
 	attributes.border_pixel = color.pixel;
 
 	XftFont *font = XftFontOpenName(display, screen, font_pattern);
+    XftFont *font1 = XftFontOpenName(display, screen, font_pattern1);
 	if (!font)
 		die("Couldn't open font");
 
@@ -153,7 +156,7 @@ int main(int argc, char *argv[])
 
 	for (int i = 1; i < argc; i++)
 	{
-		for (unsigned int eol = get_max_len(argv[i], font, max_text_width); eol; argv[i] += eol, num_of_lines++, eol = get_max_len(argv[i], font, max_text_width))
+		for (unsigned int eol = get_max_len(argv[i], font, font1, max_text_width); eol; argv[i] += eol, num_of_lines++, eol = get_max_len(argv[i], font, font1, max_text_width))
 		{
 			if (lines_size <= num_of_lines)
 			{
@@ -174,7 +177,8 @@ int main(int argc, char *argv[])
 	unsigned int x = screen_x + pos_x;
 	unsigned int y = screen_y + pos_y;
 	unsigned int text_height = font->ascent - font->descent;
-	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height + 2 * padding;
+	unsigned int text_height1 = font1->ascent - font1->descent;
+	unsigned int height = (num_of_lines - 1) * line_spacing + num_of_lines * text_height * text_height1 + 2 * padding;
 
 	if (corner == TOP_RIGHT || corner == BOTTOM_RIGHT)
 		x = screen_x + screen_width - width - border_size * 2 - pos_x;
@@ -217,6 +221,12 @@ int main(int argc, char *argv[])
 				XftDrawStringUtf8(draw, &color, font, (width - len*max_font_width)/2, line_spacing * i + text_height * (i + 1) + padding,
 								  (FcChar8 *)lines[i], len);
 			}
+            for (int i = 0; i < num_of_lines; i++){
+				int len = strlen(lines[i]);
+				XftDrawStringUtf8(draw, &color, font1, (width - len*max_font_width)/2, line_spacing * i + text_height1 * (i + 1) + padding,
+								  (FcChar8 *)lines[i], len);
+			}
+
 		}
 		else if (event.type == ButtonPress)
 		{
@@ -240,6 +250,7 @@ int main(int argc, char *argv[])
 	XftDrawDestroy(draw);
 	XftColorFree(display, visual, colormap, &color);
 	XftFontClose(display, font);
+    XftFontClose(display, font1);
 	XCloseDisplay(display);
 
 	return exit_code;
